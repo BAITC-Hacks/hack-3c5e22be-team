@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     session_ttl_seconds: int = Field(default=3600, ge=60)
     max_sessions: int = Field(default=1000, ge=1)
+    chat_requests_per_minute: int = Field(default=30, ge=1, le=300)
 
     @property
     def ai_configured(self) -> bool:

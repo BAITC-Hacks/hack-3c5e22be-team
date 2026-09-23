@@ -1,6 +1,7 @@
 import re
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
+from html import unescape
 from urllib.parse import urlparse
 
 from app.models import Product, QualityIssue, Stock
@@ -12,6 +13,9 @@ ATTRIBUTE_FIELDS = {
     "NOMINALNAYA_OTKLYUCHAYUSHCHAYA_SPOSOBNOST": "breaking_capacity",
     "TIP_USTANOVKI": "mounting",
     "TORGOVAYA_MARKA": "brand",
+    "KHARAKTERISTIKA_SRABATYVANIYA": "trip_curve",
+    "TIP_USTROYSTVA": "device_type",
+    "NOMINALNYY_OTKLYUCHAYUSHCHIY_DIFFERENTSIALNYY_TOK": "residual_current",
 }
 
 
@@ -28,7 +32,10 @@ def number(value) -> Decimal | None:
 def safe_url(value) -> str | None:
     if not isinstance(value, str):
         return None
-    parsed = urlparse(value)
+    try:
+        parsed = urlparse(value)
+    except ValueError:
+        return None
     if parsed.scheme == "https" and parsed.hostname in {"ekt.kz", "www.ekt.kz"}:
         return value if not parsed.username and not parsed.password else None
     return None
@@ -39,7 +46,13 @@ def text_key(value: str) -> str:
 
 
 def normalize(raw: dict, observed_at: datetime, source: str, stale_seconds: int) -> Product:
+    if not isinstance(raw, dict) or not isinstance(raw.get("name"), str) or not raw["name"].strip():
+        raise ValueError("Expected a product with a non-empty name")
+    if observed_at.tzinfo is None:
+        raise ValueError("Observed timestamp must include a timezone")
     properties = raw.get("properties") or {}
+    if not isinstance(properties, dict) or not isinstance(raw.get("stores", []), list):
+        raise ValueError("Invalid properties or stores")
     attributes = {
         name: str(properties[field])
         for field, name in ATTRIBUTE_FIELDS.items()
@@ -69,10 +82,10 @@ def normalize(raw: dict, observed_at: datetime, source: str, stale_seconds: int)
     details = "quantity" in raw or "properties" in raw
     return Product(
         id=raw["id"],
-        name=raw["name"],
+        name=unescape(raw["name"]),
         article=str(raw.get("article") or ""),
         supplier_article=properties.get("ARTIKULPOSTAVSHCHIKA"),
-        description=raw.get("description") or "",
+        description=unescape(re.sub(r"<[^>]*>", " ", raw.get("description") or "")),
         price=number(raw.get("price")),
         quantity=number(raw.get("quantity")),
         stores=[

@@ -1,6 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Literal
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field
 
@@ -17,7 +18,7 @@ class QualityIssue(BaseModel):
 
 
 class Product(BaseModel):
-    id: int
+    id: int = Field(gt=0)
     name: str
     article: str
     supplier_article: str | None = None
@@ -54,11 +55,13 @@ class AlternativesResult(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=2000, pattern=r"\S")
+    request_id: UUID | None = None
 
 
 class ChatResponse(BaseModel):
+    message_id: str = Field(default_factory=lambda: str(uuid4()))
     message: str
-    mode: Literal["openai", "rules"]
+    mode: Literal["openai", "rules", "catalog"]
     products: list[Product] = Field(default_factory=list)
     alternatives: list[Alternative] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)

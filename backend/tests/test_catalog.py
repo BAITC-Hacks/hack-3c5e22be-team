@@ -60,13 +60,14 @@ def test_unsuitable_alternative_excluded(client, raw_products, change):
 def test_list_refresh_does_not_make_old_stock_fresh(client, raw_products):
     old = datetime.now(UTC) - timedelta(days=2)
     catalog = client.app.state.catalog
+    raw_products[1]["id"] = 900099
     catalog.upsert(raw_products[1], old, "synthetic")
     catalog.upsert(
-        {"id": 900002, "name": "New list title", "article": "DEMO-002", "price": 2000},
+        {"id": 900099, "name": "New list title", "article": "DEMO-002", "price": 2000},
         datetime.now(UTC),
         "synthetic",
     )
-    product = client.get("/api/products/900002").json()
+    product = client.get("/api/products/900099").json()
     assert product["stale"] is True
     assert product["observed_at"] == old.isoformat().replace("+00:00", "Z")
     assert product["price"] == "1200"

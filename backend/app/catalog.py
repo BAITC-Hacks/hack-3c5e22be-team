@@ -1,5 +1,4 @@
 import json
-import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
@@ -7,6 +6,7 @@ from pathlib import Path
 
 from app.models import Alternative, AlternativesResult, Product
 from app.normalize import normalize, text_key
+from app.search import tokens
 
 
 class Catalog:
@@ -32,7 +32,11 @@ class Catalog:
         # Validate before persisting; a list refresh must not relabel old stock as fresh.
         normalize(raw, observed_at, source, self.stale_seconds)
         with self.connect() as db:
-            existing = db.execute("SELECT raw FROM products WHERE id=?", (raw["id"],)).fetchone()
+            existing = db.execute(
+                "SELECT raw, observed_at FROM products WHERE id=?", (raw["id"],)
+            ).fetchone()
+            if existing and datetime.fromisoformat(existing[1]) > observed_at:
+                return  # An older concurrent response must not overwrite a newer snapshot.
             if (
                 existing
                 and any(key in json.loads(existing[0]) for key in ("properties", "quantity"))
@@ -69,8 +73,8 @@ class Catalog:
         return [self._product(row) for row in rows]
 
     def search(self, query: str, limit: int = 5) -> list[Product]:
-        tokens = re.findall(r"[\w.,]+", query.casefold().replace("ё", "е"))
-        if not tokens:
+        wanted = tokens(query)
+        if not wanted:
             return []
         matches = []
         for product in self.all():
@@ -82,14 +86,26 @@ class Catalog:
             if query.strip().casefold() in identifiers:
                 matches.append((1000, product))
                 continue
-            haystack = (
-                (product.name + " " + product.article + " " + (product.supplier_article or ""))
-                .casefold()
-                .replace("ё", "е")
+            haystack = tokens(
+                " ".join(
+                    [
+                        product.name,
+                        product.article,
+                        product.supplier_article or "",
+                        product.category or "",
+                    ]
+                )
             )
-            if all(token in haystack for token in tokens):
-                matches.append((len(tokens), product))
+            if wanted <= haystack:
+                matches.append((len(wanted), product))
+        exact = [p for score, p in matches if score == 1000]
+        if exact:
+            return exact[:limit]
         return [p for _, p in sorted(matches, key=lambda item: (-item[0], item[1].id))[:limit]]
+
+    def count(self) -> int:
+        with self.connect() as db:
+            return db.execute("SELECT COUNT(*) FROM products").fetchone()[0]
 
     def alternatives(self, product_id: int) -> AlternativesResult:
         original = self.get(product_id)
@@ -122,6 +138,11 @@ class Catalog:
             if all(
                 text_key(original.attributes[k]) == text_key(candidate.attributes.get(k, ""))
                 for k in required
+            ) and all(
+                not (original.attributes.get(key) or candidate.attributes.get(key))
+                or text_key(original.attributes.get(key, ""))
+                == text_key(candidate.attributes.get(key, ""))
+                for key in ("trip_curve", "device_type", "residual_current")
             ):
                 result.items.append(
                     Alternative(

@@ -1,3 +1,4 @@
+import asyncio
 from datetime import UTC, datetime
 
 import httpx
@@ -12,6 +13,7 @@ class CatalogUnavailable(Exception):
 class EktClient:
     def __init__(self, settings: Settings, transport=None):
         self.configured = bool(settings.ekt_username and settings.ekt_password.get_secret_value())
+        self.timeout = settings.ekt_timeout_seconds
         self.client = httpx.AsyncClient(
             base_url="https://ekt.kz/api/",
             auth=httpx.BasicAuth(settings.ekt_username, settings.ekt_password.get_secret_value()),
@@ -24,13 +26,14 @@ class EktClient:
         if not self.configured:
             raise CatalogUnavailable("Не настроен доступ к каталогу.")
         try:
-            response = await self.client.get(path, params=params)
+            async with asyncio.timeout(self.timeout):
+                response = await self.client.get(path, params=params)
             response.raise_for_status()
             result = response.json()
             if not isinstance(result, dict):
                 raise ValueError("Expected object")
             return result
-        except (httpx.HTTPError, ValueError) as exc:
+        except (httpx.HTTPError, ValueError, TimeoutError) as exc:
             raise CatalogUnavailable(
                 "Каталог недоступен; актуальность данных не подтверждена."
             ) from exc
