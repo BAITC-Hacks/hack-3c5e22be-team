@@ -16,6 +16,8 @@ from app.config import Settings
 from app.ekt import CatalogUnavailable, EktClient
 from app.errors import ApiError, http_error, validation_error
 from app.models import AlternativesResult, ChatRequest, ChatResponse, Product
+from app.public_access import install_public_access
+from app.site import install_site_routes
 from app.terms import load_terms
 
 
@@ -105,6 +107,16 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
             and origin != str(request.base_url).rstrip("/")
         ):
             raise ApiError(403, "ORIGIN_FORBIDDEN", "Origin не разрешён.")
+        # Tabs share the cart cookie. Resume that browser session so opening a
+        # second chat cannot silently make an existing /cart link point elsewhere.
+        existing_token = request.cookies.get(COOKIE_NAME) if settings.demo_cart_enabled else None
+        existing = app.state.sessions.get(existing_token) if existing_token else None
+        if existing is not None:
+            response.headers["Cache-Control"] = "no-store"
+            return {
+                "session_token": existing_token,
+                "expires_in": max(1, int(existing.expires_at - time.monotonic())),
+            }
         try:
             token = app.state.sessions.create()
         except OverflowError as exc:
@@ -129,6 +141,7 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
     async def delete_session(response: Response, authorization: str | None = Header(default=None)):
         token, _ = session_for(authorization)
         app.state.sessions.items.pop(token, None)
+        response.delete_cookie(COOKIE_NAME, path="/")
         response.delete_cookie(COOKIE_NAME, path="/cart")
 
     @app.post("/api/chat", response_model=ChatResponse)
@@ -182,6 +195,8 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
                     session.replies.popitem(last=False)
             return response
 
+    install_site_routes(app)
+    install_public_access(app, settings)
     return app
 
 

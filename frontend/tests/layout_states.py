@@ -46,12 +46,12 @@ def run():
         page.get_by_role('button', name='Остаться', exact=True).click()
         expect(page.locator('.product')).to_be_visible()
         # A fresh page with backend unavailable stays actionable for retry.
-        page.route('http://127.0.0.1:8000/**', lambda route: route.abort())
+        page.route('http://127.0.0.1:5173/api/**', lambda route: route.abort())
         page.reload()
         expect(page.locator('#error')).to_be_visible()
         expect(page.locator('#connection')).to_contain_text('недоступен')
         page.screenshot(path=str(OUTPUT / 'desktop-offline.png'), full_page=True)
-        page.unroute('http://127.0.0.1:8000/**')
+        page.unroute('http://127.0.0.1:5173/api/**')
         page.locator('#retry').click()
         expect(page.locator('#send')).to_be_enabled(timeout=30000)
         expect(page.locator('#error')).to_be_hidden()
@@ -61,3 +61,4 @@ def run():
 
 if __name__ == '__main__':
     run()
+

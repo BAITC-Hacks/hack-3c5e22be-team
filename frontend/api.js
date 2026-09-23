@@ -1,5 +1,5 @@
 // Session credentials live only in this module's memory, never in URLs or storage.
-export const API_BASE = `${location.protocol}//${location.hostname}:8000`;
+export const API_BASE = location.origin;
 export class ApiError extends Error {
   constructor(message, status = 0, code = 'NETWORK_ERROR', retryable = true) {
     super(message);
@@ -18,7 +18,7 @@ export class CatalogApi {
       const headers = { ...extraHeaders };
       if (body !== undefined) headers['Content-Type'] = 'application/json';
       if (authenticated && this.#token) headers.Authorization = `Bearer ${this.#token}`;
-      const response = await fetch(`${API_BASE}${path}`, {
+      const response = await fetch(path, {
         method, headers, body: body === undefined ? undefined : JSON.stringify(body),
         signal: controller.signal, credentials: 'include', cache: 'no-store',
       });
@@ -49,7 +49,7 @@ export class CatalogApi {
       if (error instanceof ApiError) throw error;
       throw new ApiError(error.name === 'AbortError'
         ? 'Ответ занимает слишком много времени. Запрос мог дойти до сервера; повторите позже.'
-        : 'Нет связи с сервером. Проверьте, запущен ли backend на порту 8000.');
+        : 'Нет связи с сервером. Проверьте соединение и повторите запрос.');
     } finally { clearTimeout(timer); }
   }
   health() { return this.request('/health'); }

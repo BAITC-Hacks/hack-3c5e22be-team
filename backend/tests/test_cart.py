@@ -67,6 +67,7 @@ def test_sessions_are_isolated_and_link_is_not_a_capability(cart_client):
     first = login(c)
     proposal = propose(c, first).json()
     first_cookie = c.cookies.get("ekt_demo_session")
+    c.cookies.clear()  # A different browser, not another tab sharing the same cookie.
     second = login(c)
     second_cookie = c.cookies.get("ekt_demo_session")
     assert confirm(c, second, proposal).status_code == 404
@@ -168,7 +169,7 @@ def test_csrf_cookie_flags_and_key_requirement(cart_client):
     )
     response = c.post("/api/chat/sessions")
     cookie = response.headers["set-cookie"]
-    assert "HttpOnly" in cookie and "SameSite=lax" in cookie and "Path=/cart" in cookie
+    assert "HttpOnly" in cookie and "SameSite=lax" in cookie and "Path=/;" in cookie
     auth = {"Authorization": "Bearer " + response.json()["session_token"]}
     proposal = propose(c, auth).json()
     assert (

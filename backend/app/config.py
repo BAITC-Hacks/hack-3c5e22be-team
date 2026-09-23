@@ -25,6 +25,14 @@ class Settings(BaseSettings):
     cart_proposal_ttl_seconds: int = Field(default=300, ge=1, le=900)
     cart_cookie_secure: bool = False
     cart_requests_per_minute: int = Field(default=60, ge=1, le=300)
+    public_demo: bool = False
+    public_demo_username: SecretStr = SecretStr("")
+    public_demo_password: SecretStr = SecretStr("")
+    public_demo_requests_per_minute: int = Field(default=120, ge=1)
+    public_demo_max_requests: int = Field(default=1000, ge=1)
+    public_demo_cookie_secure: bool = True
+    public_demo_cookie_ttl_seconds: int = Field(default=28800, ge=1)
+    public_demo_max_body_bytes: int = Field(default=65536, ge=1)
 
     @property
     def ai_configured(self) -> bool:

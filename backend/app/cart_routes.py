@@ -14,12 +14,14 @@ COOKIE_NAME = "ekt_demo_session"
 
 
 def set_cart_cookie(response, request, token, settings):
+    # Remove the previous narrow-path cookie when upgrading an existing browser.
+    response.delete_cookie(COOKIE_NAME, path="/cart")
     response.set_cookie(
         COOKIE_NAME,
         token,
         httponly=True,
         samesite="lax",
-        path="/cart",
+        path="/",
         secure=settings.cart_cookie_secure or request.url.scheme == "https",
         max_age=settings.session_ttl_seconds,
     )

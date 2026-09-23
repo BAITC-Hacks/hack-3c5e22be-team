@@ -44,7 +44,7 @@ def run():
             idle()
 
         def cart():
-            result = context.request.get('http://127.0.0.1:8000/api/cart', headers=auth)
+            result = context.request.get('http://127.0.0.1:5173/api/cart', headers=auth)
             assert result.ok
             return result.json()
 
@@ -75,14 +75,14 @@ def run():
         assert cart()['items'][0]['quantity'] == 2
         assert len(confirms) == 1
         page.screenshot(path=str(OUTPUT / 'desktop-cart.png'), full_page=True)
-        assert page.locator('#cart-link').get_attribute('href') == 'http://127.0.0.1:8000/cart'
+        assert page.locator('#cart-link').get_attribute('href') == 'http://127.0.0.1:5173/cart'
         # Real cookie-protected cart page, not a mocked view.
         with page.expect_popup() as popup:
             page.locator('#cart-link').click()
         cart_page = popup.value
         expect(cart_page.locator('body')).to_contain_text('DEMO-002')
         cart_page.close()
-        cookies = context.cookies('http://127.0.0.1:8000/cart')
+        cookies = context.cookies('http://127.0.0.1:5173/cart')
         assert any(c['name'] == 'ekt_demo_session' and c['httpOnly'] for c in cookies)
 
         # Set, cancel, remove and clear all require a separate confirmation.
@@ -216,7 +216,7 @@ def run():
         page.locator('#close-cart').click()
         # Isolated browser does not gain access by opening the cart URL.
         stranger = browser.new_context()
-        denied = stranger.request.get('http://127.0.0.1:8000/cart')
+        denied = stranger.request.get('http://127.0.0.1:5173/cart')
         assert denied.status == 401
         stranger.close()
         assert page.evaluate('localStorage.length + sessionStorage.length') == 0
@@ -240,3 +240,4 @@ def run():
 
 if __name__ == '__main__':
     run()
+
