@@ -1,5 +1,7 @@
 // Session credentials live only in this module's memory, never in URLs or storage.
-export const API_BASE = `${location.protocol}//${location.hostname}:8000`;
+// Local two-port development; hosted frontend and API share one HTTPS origin.
+export const API_BASE = ['127.0.0.1', 'localhost'].includes(location.hostname) && location.port === '5173'
+  ? `${location.protocol}//${location.hostname}:8000` : location.origin;
 export class ApiError extends Error {
   constructor(message, status = 0, code = 'NETWORK_ERROR', retryable = true) {
     super(message);
