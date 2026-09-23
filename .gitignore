@@ -9,3 +9,6 @@ __pycache__/
 !.env.example
 backend/data/
 work/
+.tools/
+test-results/
+*.log

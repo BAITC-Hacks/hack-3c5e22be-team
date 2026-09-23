@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light"><title>ЭКТ — помощник по каталогу</title>
+  <link rel="stylesheet" href="styles.css"><script type="module" src="app.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="./"><span class="brand-mark">экт<span>●</span></span><span>ЭЛЕКТРОКОМПЛЕКТ</span></a>
+    <div class="side-heading">РАБОЧЕЕ ПРОСТРАНСТВО</div>
+    <div class="nav-active"><span>✧</span> Помощник по каталогу</div>
+    <button id="new-chat" class="new-chat">＋ Новый диалог</button>
+    <div class="side-note"><span class="small-label">ОТ ЗАПРОСА К РЕШЕНИЮ</span><h2>Разберёмся<br>в деталях.</h2><p>Найдите товар, изучите характеристики и сравните возможные замены.</p><div class="line-art" aria-hidden="true">↗</div></div>
+    <div class="side-footer">Метрологи <span>HackAlem AI · Прототип</span></div>
+  </aside>
+  <main>
+    <header><div><span class="breadcrumb">Каталог / </span>ИИ-помощник</div><button id="new-chat-mobile" class="mobile-new" aria-label="Новый диалог">＋</button><span id="connection" class="connection" role="status">Проверяем подключение…</span></header>
+    <section class="workspace">
+      <div class="page-title"><div><div class="eyebrow">ВАШ ПОМОЩНИК ПО ЭЛЕКТРОТЕХНИКЕ</div><h1>Точный подбор.<br><span>Понятные ответы.</span></h1></div><span class="title-icon" aria-hidden="true">✧</span></div>
+      <div class="context-bar"><span class="dot"></span><span>Ответы на основе каталога. Доступность и ограничения показаны рядом с товаром.</span></div>
+      <section id="welcome" class="welcome"><h2>С чего начнём?</h2><p>Введите артикул или опишите, что вы ищете.</p><div class="suggestions">
+        <button data-prompt="DEMO-002"><span>01 / НАЙТИ ТОВАР</span><strong>Поиск по артикулу ↗</strong><small>Пример: DEMO-002 · тестовые данные</small></button>
+        <button data-prompt="Найди аналоги DEMO-001"><span>02 / СРАВНИТЬ</span><strong>Подобрать замену ↗</strong><small>Кандидаты и причины подбора</small></button>
+        <button data-prompt="Какие условия доставки и оплаты?"><span>03 / УТОЧНИТЬ</span><strong>Условия покупки ↗</strong><small>Только подтверждённая информация</small></button>
+      </div></section>
+      <div id="messages" role="log" aria-label="Диалог с помощником" aria-live="polite" aria-relevant="additions"></div>
+      <div id="pending" class="pending" role="status" hidden><span class="spinner"></span> Проверяем данные каталога…</div>
+      <div id="error" class="error" role="alert" hidden><span id="error-text"></span><button id="retry">Повторить</button></div>
+      <div class="composer-wrap"><form id="chat-form"><label class="sr-only" for="message">Сообщение помощнику</label><textarea id="message" rows="2" maxlength="2000" placeholder="Название товара, артикул или ваш вопрос…" required></textarea><div class="composer-bottom"><span>Enter — отправить · Shift + Enter — новая строка</span><button id="send" type="submit" aria-label="Отправить сообщение">↑</button></div></form><div class="footnote">Корзина и обработка вложений пока не подключены. Ассистент не оформляет заказы.</div></div>
+    </section>
+    <footer>Электрокомплект <span>Консультация без лишних шагов</span></footer>
+  </main>
+</body>
+</html>
