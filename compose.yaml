@@ -1,0 +1,19 @@
+services:
+  web:
+    build: .
+    ports: ["127.0.0.1:5173:8000"]
+    environment:
+      DEMO_CART_ENABLED: 'true'
+      DEMO_SEED_SYNTHETIC: 'true'
+      EKT_LIVE_ENABLED: 'false'
+      OPENAI_API_KEY: ''
+      CATALOG_DB: /app/backend/data/demo.sqlite3
+      CATALOG_STALE_SECONDS: '86400'
+      PURCHASE_TERMS_PATH: /app/backend/examples/purchase_terms.ekt.json
+      CART_COOKIE_SECURE: 'false'
+      PUBLIC_DEMO: 'false'
+    volumes: ["catalog:/app/backend/data"]
+    init: true
+    restart: unless-stopped
+volumes:
+  catalog:
