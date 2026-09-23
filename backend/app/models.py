@@ -65,7 +65,12 @@ class ChatResponse(BaseModel):
     products: list[Product] = Field(default_factory=list)
     alternatives: list[Alternative] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
-    cart_action: Literal["none", "integration_required"] = "none"
+    cart_action: Literal[
+        "none", "integration_required", "proposal_required", "confirmation_required", "view"
+    ] = "none"
+    cart_proposal: dict | None = None
+    cart_url: str | None = None
+    cart_error: str | None = None
 
 
 class Intent(BaseModel):

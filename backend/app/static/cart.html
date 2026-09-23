@@ -1,0 +1,44 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8">
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <meta name="csrf-token" content="$csrf">
+        <title>Корзина прототипа · EKT Assistant</title>
+        <style>
+        *{box-sizing:border-box}body{font:16px/1.55 system-ui;margin:0;background:#f3f6f9;color:#172b3a}
+        main{max-width:1020px;margin:40px auto;padding:24px}h1{font-size:32px;line-height:1.2}
+        .badge{font-size:12px;letter-spacing:.1em;color:#216452;font-weight:700}
+        .panel{background:white;border:1px solid #dbe4eb;border-radius:16px;padding:24px;margin:20px 0}
+        .notice{border-left:4px solid #cc9726;padding:12px 16px;background:#fff6df}
+        .scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:600px}
+        td,th{padding:14px 8px;text-align:left;border-bottom:1px solid #e4ebf0;overflow-wrap:anywhere}
+        small,.muted{color:#526879}button,input{font:inherit;padding:9px 12px;border:1px solid #acbbc7;border-radius:8px}
+        button{cursor:pointer;background:#fff;color:#164b3f}button.primary{background:#145c49;color:white;border:0}
+        button:disabled{opacity:.55;cursor:wait}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #65ae98}
+        form{display:flex;gap:12px;flex-wrap:wrap;align-items:end}label{display:grid;gap:5px}input{max-width:180px}
+        #error{color:#9a2525}[hidden]{display:none!important}pre{white-space:pre-wrap;font:inherit}
+        a{color:#185e4b}.actions{display:flex;gap:12px;flex-wrap:wrap}@media(max-width:600px){main{margin:0;padding:16px}.panel{padding:16px}h1{font-size:27px}}
+        </style><script src="/cart/app.js" defer></script></head><body><main>
+        <div class="badge">EKT ASSISTANT / ПРОТОТИП</div><h1>Ваша корзина</h1>
+        <p class="notice">$warning</p>
+        <p class="muted">Корзина хранится в этой сессии до её завершения или перезапуска сервера.
+        Каждое изменение требует подтверждения.</p>
+        <div id="error" role="alert" hidden></div><div id="status" role="status"></div>
+        <section class="panel"><div class="scroll"><table><thead><tr><th>Товар</th><th>Количество</th><th>Сумма</th><th>Действия</th></tr></thead>
+        <tbody>$rows</tbody></table></div><p>$empty</p>
+        <h2>Итого: $total $currency</h2>
+        <p class="muted">Версия корзины: $version. Для свежего содержимого обновите страницу.</p>
+        <div class="actions"><a href="/cart">Обновить корзину</a>
+        <button id="clear" $clear_disabled>Очистить корзину</button></div></section>
+        <section class="panel"><h2>Добавить товар по ID</h2>
+        <form id="add-form"><label>ID товара<input id="product-id" type="number" min="1" step="1" required></label>
+        <label>Количество<input id="quantity" type="number" min="1" max="10000" step="1" value="1" required></label>
+        <button class="primary" type="submit">Проверить и предложить</button></form>
+        <p class="muted">Поддерживаются целые количества. В реальном каталоге единицы и кратность требуют уточнения.</p></section>
+        <section class="panel" id="edit" hidden><h2>Изменить количество</h2>
+        <p id="edit-name"></p><form id="edit-form">
+        <label>Новое итоговое количество<input id="edit-quantity" type="number" min="1" max="10000" step="1" required></label>
+        <button class="primary" type="submit">Проверить изменение</button>
+        <button id="edit-close" type="button">Закрыть</button></form></section>
+        <section class="panel" id="proposal" hidden><h2>Подтвердите изменение</h2>
+        <pre id="proposal-text"></pre><div class="actions"><button id="confirm" class="primary">Подтвердить</button>
+        <button id="cancel">Отмена</button></div></section>
+        </main></body></html>
