@@ -1,0 +1,51 @@
+[
+  {
+    "id": 900001,
+    "name": "DEMO Автомат A 3P 16А — отсутствует",
+    "article": "DEMO-001",
+    "price": 1000,
+    "quantity": 0,
+    "properties": {
+      "ARTIKULPOSTAVSHCHIKA": "TEST-A16",
+      "OBYEM": "Автоматический выключатель",
+      "NOMINALNYY_TOK": "16 А",
+      "NOMINALNOE_NAPRYAZHENIE": "400В",
+      "KOLICHESTVO_POLYUSOV": "3",
+      "NOMINALNAYA_OTKLYUCHAYUSHCHAYA_SPOSOBNOST": "6кА",
+      "TIP_USTANOVKI": "DIN",
+      "TORGOVAYA_MARKA": "DEMO"
+    }
+  },
+  {
+    "id": 900002,
+    "name": "DEMO Автомат B 3P 16А — кандидат для сравнения",
+    "article": "DEMO-002",
+    "price": 1200,
+    "quantity": 8,
+    "properties": {
+      "ARTIKULPOSTAVSHCHIKA": "TEST-B16",
+      "OBYEM": "Автоматический выключатель",
+      "NOMINALNYY_TOK": "16А",
+      "NOMINALNOE_NAPRYAZHENIE": "400 В",
+      "KOLICHESTVO_POLYUSOV": "3",
+      "NOMINALNAYA_OTKLYUCHAYUSHCHAYA_SPOSOBNOST": "6 кА",
+      "TIP_USTANOVKI": "DIN",
+      "TORGOVAYA_MARKA": "DEMO"
+    }
+  },
+  {
+    "id": 900003,
+    "name": "DEMO Автомат 3P 16А — конфликт характеристики",
+    "article": "DEMO-003",
+    "price": 1500,
+    "quantity": 4,
+    "properties": {
+      "OBYEM": "Автоматический выключатель",
+      "NOMINALNYY_TOK": "25 А",
+      "NOMINALNOE_NAPRYAZHENIE": "400В",
+      "KOLICHESTVO_POLYUSOV": "3",
+      "NOMINALNAYA_OTKLYUCHAYUSHCHAYA_SPOSOBNOST": "6кА",
+      "TIP_USTANOVKI": "DIN"
+    }
+  }
+]
