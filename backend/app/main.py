@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import FastAPI, Header, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.ai import Interpreter
+from app.cart import DemoCart
+from app.cart_routes import COOKIE_NAME, install_cart_routes
 from app.catalog import Catalog
 from app.chat import ChatService, Sessions
 from app.config import Settings
@@ -21,6 +23,7 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
         app.state.interpreter = interpreter or Interpreter(settings)
         app.state.ekt = ekt_client or EktClient(settings)
         app.state.sessions = Sessions(settings.session_ttl_seconds, settings.max_sessions)
+        app.state.cart = DemoCart(app.state.catalog, settings.cart_proposal_ttl_seconds)
         app.state.terms = load_terms(settings.purchase_terms_path)
         app.state.chat = ChatService(app.state.catalog, app.state.interpreter, app.state.terms)
         yield
@@ -32,8 +35,10 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_methods=["GET", "POST", "DELETE"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
+        allow_credentials=True,
     )
+    install_cart_routes(app, settings)
 
     @app.get("/health")
     def health():
@@ -42,7 +47,8 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
             "catalog_count": len(app.state.catalog.all()),
             "ai_configured": settings.ai_configured,
             "live_catalog_enabled": settings.ekt_live_enabled,
-            "cart_enabled": False,
+            "cart_enabled": settings.demo_cart_enabled,
+            "cart_mode": "demo" if settings.demo_cart_enabled else "disabled",
         }
 
     @app.get("/api/products", response_model=list[Product])
@@ -80,11 +86,29 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
         return app.state.terms
 
     @app.post("/api/chat/sessions", status_code=201)
-    def new_session():
+    def new_session(request: Request, response: Response):
+        origin = request.headers.get("origin")
+        if (
+            origin
+            and origin not in settings.cors_origins
+            and origin != str(request.base_url).rstrip("/")
+        ):
+            raise HTTPException(403, "Origin не разрешён.")
         try:
             token = app.state.sessions.create()
         except OverflowError as exc:
             raise HTTPException(503, "Лимит сессий достигнут. Повторите позже.") from exc
+        response.headers["Cache-Control"] = "no-store"
+        if settings.demo_cart_enabled:
+            response.set_cookie(
+                COOKIE_NAME,
+                token,
+                httponly=True,
+                samesite="lax",
+                path="/cart",
+                secure=settings.cart_cookie_secure or request.url.scheme == "https",
+                max_age=settings.session_ttl_seconds,
+            )
         return {"session_token": token, "expires_in": settings.session_ttl_seconds}
 
     def session_for(authorization: str | None):
@@ -97,9 +121,10 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
         return token, session
 
     @app.delete("/api/chat/sessions/current", status_code=204)
-    def delete_session(authorization: str | None = Header(default=None)):
+    def delete_session(response: Response, authorization: str | None = Header(default=None)):
         token, _ = session_for(authorization)
         app.state.sessions.items.pop(token, None)
+        response.delete_cookie(COOKIE_NAME, path="/cart")
 
     @app.post("/api/chat", response_model=ChatResponse)
     async def chat(body: ChatRequest, authorization: str | None = Header(default=None)):

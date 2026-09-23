@@ -4,6 +4,7 @@ import time
 from dataclasses import dataclass, field
 
 from app.ai import Interpreter
+from app.cart import CartState
 from app.catalog import Catalog
 from app.models import ChatResponse, Product
 from app.terms import PurchaseTerms
@@ -15,6 +16,7 @@ class Session:
     history: list[dict] = field(default_factory=list)
     product_ids: list[int] = field(default_factory=list)
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    cart: CartState = field(default_factory=CartState)
 
 
 class Sessions:
