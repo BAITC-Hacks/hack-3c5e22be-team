@@ -1,35 +1,21 @@
 <!doctype html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light"><title>ЭКТ — помощник по каталогу</title>
-  <link rel="stylesheet" href="styles.css"><script type="module" src="app.js"></script>
-</head>
-<body>
-  <aside class="sidebar">
-    <a class="brand" href="./"><span class="brand-mark">экт<span>●</span></span><span>ЭЛЕКТРОКОМПЛЕКТ</span></a>
-    <div class="side-heading">РАБОЧЕЕ ПРОСТРАНСТВО</div>
-    <div class="nav-active"><span>✧</span> Помощник по каталогу</div>
-    <button id="new-chat" class="new-chat">＋ Новый диалог</button>
-    <div class="side-note"><span class="small-label">ОТ ЗАПРОСА К РЕШЕНИЮ</span><h2>Разберёмся<br>в деталях.</h2><p>Найдите товар, изучите характеристики и сравните возможные замены.</p><div class="line-art" aria-hidden="true">↗</div></div>
-    <div class="side-footer">Метрологи <span>HackAlem AI · Прототип</span></div>
-  </aside>
-  <main>
-    <header><div><span class="breadcrumb">Каталог / </span>ИИ-помощник</div><button id="new-chat-mobile" class="mobile-new" aria-label="Новый диалог">＋</button><span id="connection" class="connection" role="status">Проверяем подключение…</span></header>
-    <section class="workspace">
-      <div class="page-title"><div><div class="eyebrow">ВАШ ПОМОЩНИК ПО ЭЛЕКТРОТЕХНИКЕ</div><h1>Точный подбор.<br><span>Понятные ответы.</span></h1></div><span class="title-icon" aria-hidden="true">✧</span></div>
-      <div class="context-bar"><span class="dot"></span><span>Ответы на основе каталога. Доступность и ограничения показаны рядом с товаром.</span></div>
-      <section id="welcome" class="welcome"><h2>С чего начнём?</h2><p>Введите артикул или опишите, что вы ищете.</p><div class="suggestions">
-        <button data-prompt="DEMO-002"><span>01 / НАЙТИ ТОВАР</span><strong>Поиск по артикулу ↗</strong><small>Пример: DEMO-002 · тестовые данные</small></button>
-        <button data-prompt="Найди аналоги DEMO-001"><span>02 / СРАВНИТЬ</span><strong>Подобрать замену ↗</strong><small>Кандидаты и причины подбора</small></button>
-        <button data-prompt="Какие условия доставки и оплаты?"><span>03 / УТОЧНИТЬ</span><strong>Условия покупки ↗</strong><small>Только подтверждённая информация</small></button>
-      </div></section>
-      <div id="messages" role="log" aria-label="Диалог с помощником" aria-live="polite" aria-relevant="additions"></div>
-      <div id="pending" class="pending" role="status" hidden><span class="spinner"></span> Проверяем данные каталога…</div>
-      <div id="error" class="error" role="alert" hidden><span id="error-text"></span><button id="retry">Повторить</button></div>
-      <div class="composer-wrap"><form id="chat-form"><label class="sr-only" for="message">Сообщение помощнику</label><textarea id="message" rows="2" maxlength="2000" placeholder="Название товара, артикул или ваш вопрос…" required></textarea><div class="composer-bottom"><span>Enter — отправить · Shift + Enter — новая строка</span><button id="send" type="submit" aria-label="Отправить сообщение">↑</button></div></form><div class="footnote">Корзина и обработка вложений пока не подключены. Ассистент не оформляет заказы.</div></div>
-    </section>
-    <footer>Электрокомплект <span>Консультация без лишних шагов</span></footer>
-  </main>
-</body>
-</html>
+<html lang="ru"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content"><meta name="color-scheme" content="light dark"><title>EKT Assistant — подбор электротоваров</title><link rel="stylesheet" href="styles.css"><script type="module" src="app.js"></script>
+</head><body><div class="app-shell">
+<aside class="sidebar" id="sidebar" aria-label="Навигация">
+  <a class="brand" href="./"><span class="brand-symbol" data-icon="spark"></span><span>EKT <b>Assistant</b></span></a>
+  <button class="sidebar-search" id="focus-search"><span data-icon="search"></span>Поиск товара <kbd>Ctrl K</kbd></button>
+  <nav><button class="nav-item active" id="nav-chat"><span data-icon="chat"></span>AI-помощник</button><button class="nav-item" id="nav-catalog"><span data-icon="box"></span>Каталог товаров</button><button class="nav-item" id="nav-cart"><span data-icon="bag"></span>Корзина прототипа <span class="nav-count" data-cart-count>0</span></button><button class="nav-item" id="nav-terms"><span data-icon="truck"></span>Оплата и доставка</button><button class="nav-item" id="new-chat"><span data-icon="plus"></span>Новый диалог</button></nav>
+  <div class="nav-section">Полезная информация</div><button class="nav-item" id="nav-help"><span data-icon="help"></span>Как это работает</button>
+  <div class="sidebar-bottom"><div class="theme-switch"><button id="theme-light" class="selected" aria-pressed="true"><span data-icon="sun"></span>Светлая</button><button id="theme-dark" aria-pressed="false"><span data-icon="moon"></span>Тёмная</button></div><div class="profile"><span class="avatar" data-icon="user"></span><div><strong>Гостевая сессия</strong><small>Метрологи · HackAlem AI</small></div></div></div>
+</aside>
+<header class="topbar"><div class="header-title"><button class="icon-button mobile-only" id="menu-toggle" aria-label="Открыть меню" aria-expanded="false"><span data-icon="menu"></span></button><h1>AI-помощник</h1></div><div class="header-actions"><button class="primary" id="open-cart"><span data-icon="bag"></span><span>Корзина</span><span data-cart-count>0</span></button><button class="icon-button" id="help" aria-label="Помощь"><span data-icon="help"></span></button><span class="assistant-avatar" title="EKT Assistant"><span data-icon="bot"></span><i id="connection-dot"></i></span></div></header>
+<main class="chat-area" aria-label="Помощник по каталогу"><div class="scroll-area" id="conversation-scroll">
+  <section id="welcome" class="welcome"><div class="welcome-inner"><h2>Добро пожаловать в EKT</h2><p>Найдём нужный товар и разберёмся в деталях.<br class="mobile-only"> С чего начнём?</p><div class="suggestions"><button data-prompt="DEMO-002"><span class="tile-icon amber" data-icon="search"></span><strong>Найти товар</strong><span class="tile-plus" data-icon="plus"></span></button><button data-prompt="Найди аналоги DEMO-001"><span class="tile-icon blue" data-icon="compare"></span><strong>Подобрать аналог</strong><span class="tile-plus" data-icon="plus"></span></button><button data-prompt="Характеристики DEMO-002"><span class="tile-icon green" data-icon="box"></span><strong>Характеристики</strong><span class="tile-plus" data-icon="plus"></span></button><button data-prompt="Какие условия оплаты и доставки?"><span class="tile-icon pink" data-icon="truck"></span><strong>Оплата и доставка</strong><span class="tile-plus" data-icon="plus"></span></button></div><small class="demo-hint">Примеры товаров используют тестовый каталог</small></div></section>
+  <div id="messages" role="log" aria-label="Диалог" aria-live="polite" aria-relevant="additions"></div><div id="pending" class="pending" role="status" hidden><span class="spinner"></span>Помощник проверяет данные…</div>
+</div><div class="composer-zone"><div id="error" class="error" role="alert" hidden><span id="error-text"></span><button id="retry">Повторить</button><button id="recover-session" hidden>Начать новую сессию</button></div><form id="chat-form" class="composer"><div class="input-row"><label class="sr-only" for="message">Артикул или вопрос помощнику</label><textarea id="message" rows="1" maxlength="2000" required placeholder="Напишите артикул или спросите о товаре…"></textarea><button id="send" class="icon-button" aria-label="Отправить сообщение" type="submit"><span data-icon="send"></span></button></div><div class="composer-toolbar"><button type="button" id="examples"><span data-icon="grid"></span>Примеры запросов</button><span class="toolbar-divider"></span><span id="connection" role="status">Подключение…</span><span id="char-count">0 / 2 000</span></div></form><p class="footnote">Проверяйте предупреждения в карточках. Корзина прототипа не оформляет заказ на ekt.kz.</p></div></main>
+<aside class="cart-panel" id="cart-panel" aria-label="Корзина прототипа"><div class="panel-heading"><h2>Корзина <span>(<span data-cart-count>0</span>)</span></h2><div><button class="icon-button" id="refresh-cart" aria-label="Обновить корзину"><span data-icon="refresh"></span></button><button class="icon-button panel-close" id="close-cart" aria-label="Закрыть корзину"><span data-icon="close"></span></button></div></div><div class="cart-scroll"><div class="prototype-label">КОРЗИНА ПРОТОТИПА</div><div id="cart-content"><p class="muted">Подключаем сессию…</p></div><div id="cart-pending"></div><div id="recent-section" hidden><h3 class="recent-heading">Недавно просмотрено</h3><div id="recent-products"></div></div></div><div class="cart-footer"><div class="total-row"><span>Справочная сумма</span><strong id="cart-total">—</strong></div><a id="cart-link" class="primary full" target="_blank" rel="noopener" hidden>Открыть актуальную корзину <span data-icon="arrow"></span></a><button id="clear-cart" class="text-button" hidden>Очистить корзину</button><small>Без оплаты и оформления заказа.<br>Данные хранятся до завершения сессии.</small></div></aside>
+</div><button id="backdrop" class="backdrop" aria-label="Закрыть панель" hidden></button>
+<dialog id="proposal-dialog" aria-labelledby="proposal-title"><div class="dialog-heading"><span class="tile-icon blue" data-icon="bag"></span><div><small>КОРЗИНА ПРОТОТИПА</small><h2 id="proposal-title">Подтвердите изменение</h2></div></div><div id="proposal-content"></div><div id="dialog-error" class="error" role="alert" hidden><span></span><button id="dialog-retry">Повторить</button></div><div id="dialog-pending" class="pending" role="status" hidden><span class="spinner"></span>Проверяем цену и остаток…</div><div class="dialog-actions"><button id="cancel-proposal" class="secondary">Отмена</button><button id="confirm-proposal" class="primary">Подтвердить</button></div><p class="dialog-footnote">Только после подтверждения изменится корзина прототипа. Заказ на ekt.kz не создаётся.</p></dialog>
+<dialog id="info-dialog" aria-labelledby="info-title"><div class="info-heading"><h2 id="info-title"></h2><button id="close-info" class="icon-button" aria-label="Закрыть"><span data-icon="close"></span></button></div><div id="info-content"></div><div class="dialog-actions" id="info-actions"></div></dialog>
+</body></html>

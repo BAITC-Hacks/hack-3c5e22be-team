@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ekt-assistant-backend"
-version = "0.2.0"
-description = "Read-only catalogue and AI consultation API for HackAlem"
+version = "0.3.0"
+description = "Catalogue, AI consultation and prototype cart API for HackAlem"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115,<1",
@@ -21,6 +21,9 @@ dev = ["pytest>=8,<10", "ruff>=0.11,<1"]
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]
+
+[tool.setuptools.package-data]
+app = ["static/*.js", "static/*.html"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

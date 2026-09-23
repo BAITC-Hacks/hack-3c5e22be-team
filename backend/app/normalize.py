@@ -50,7 +50,9 @@ def normalize(raw: dict, observed_at: datetime, source: str, stale_seconds: int)
         raise ValueError("Expected a product with a non-empty name")
     if observed_at.tzinfo is None:
         raise ValueError("Observed timestamp must include a timezone")
-    properties = raw.get("properties") or {}
+    properties = raw.get("properties")
+    if properties is None:
+        properties = {}
     if not isinstance(properties, dict) or not isinstance(raw.get("stores", []), list):
         raise ValueError("Invalid properties or stores")
     attributes = {

@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     session_ttl_seconds: int = Field(default=3600, ge=60)
     max_sessions: int = Field(default=1000, ge=1)
     chat_requests_per_minute: int = Field(default=30, ge=1, le=300)
+    demo_cart_enabled: bool = False
+    cart_proposal_ttl_seconds: int = Field(default=300, ge=1, le=900)
+    cart_cookie_secure: bool = False
+    cart_requests_per_minute: int = Field(default=60, ge=1, le=300)
 
     @property
     def ai_configured(self) -> bool:

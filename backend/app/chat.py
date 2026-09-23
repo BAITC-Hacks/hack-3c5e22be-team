@@ -6,6 +6,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 
 from app.ai import Interpreter
+from app.cart import CartState
 from app.catalog import Catalog
 from app.models import ChatResponse, Intent, Product
 from app.terms import PurchaseTerms
@@ -19,6 +20,9 @@ class Session:
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     requests: list[float] = field(default_factory=list)
     replies: OrderedDict = field(default_factory=OrderedDict)
+    cart: CartState = field(default_factory=CartState)
+    csrf_token: str = field(default_factory=lambda: secrets.token_urlsafe(32))
+    cart_requests: list[float] = field(default_factory=list)
 
 
 class Sessions:

@@ -1,12 +1,15 @@
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Header, Query
+from fastapi import FastAPI, Header, Query, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.ai import Interpreter
+from app.cart import DemoCart
+from app.cart_chat import cart_reply
+from app.cart_routes import COOKIE_NAME, install_cart_routes, set_cart_cookie
 from app.catalog import Catalog
 from app.chat import ChatService, Sessions
 from app.config import Settings
@@ -25,6 +28,7 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
         app.state.interpreter = interpreter or Interpreter(settings)
         app.state.ekt = ekt_client or EktClient(settings)
         app.state.sessions = Sessions(settings.session_ttl_seconds, settings.max_sessions)
+        app.state.cart = DemoCart(app.state.catalog, settings, app.state.ekt)
         app.state.terms = load_terms(settings.purchase_terms_path)
         app.state.chat = ChatService(app.state.catalog, app.state.interpreter, app.state.terms)
         try:
@@ -33,15 +37,17 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
             await app.state.interpreter.close()
             await app.state.ekt.close()
 
-    app = FastAPI(title="EKT Assistant — Backend", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(title="EKT Assistant — Backend", version="0.3.0", lifespan=lifespan)
     app.add_exception_handler(StarletteHTTPException, http_error)
     app.add_exception_handler(RequestValidationError, validation_error)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_methods=["GET", "POST", "DELETE"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "Idempotency-Key"],
+        allow_credentials=True,
     )
+    install_cart_routes(app, settings)
 
     @app.get("/health")
     def health():
@@ -50,7 +56,8 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
             "catalog_count": app.state.catalog.count(),
             "ai_configured": settings.ai_configured,
             "live_catalog_enabled": settings.ekt_live_enabled,
-            "cart_enabled": False,
+            "cart_enabled": settings.demo_cart_enabled,
+            "cart_mode": "prototype" if settings.demo_cart_enabled else "disabled",
         }
 
     @app.get("/api/products", response_model=list[Product])
@@ -90,13 +97,23 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
         return app.state.terms
 
     @app.post("/api/chat/sessions", status_code=201)
-    async def new_session():
+    async def new_session(request: Request, response: Response):
+        origin = request.headers.get("origin")
+        if (
+            origin
+            and origin not in settings.cors_origins
+            and origin != str(request.base_url).rstrip("/")
+        ):
+            raise ApiError(403, "ORIGIN_FORBIDDEN", "Origin не разрешён.")
         try:
             token = app.state.sessions.create()
         except OverflowError as exc:
             raise ApiError(
                 503, "SESSION_CAPACITY", "Лимит сессий достигнут. Повторите позже.", retryable=True
             ) from exc
+        response.headers["Cache-Control"] = "no-store"
+        if settings.demo_cart_enabled:
+            set_cart_cookie(response, request, token, settings)
         return {"session_token": token, "expires_in": settings.session_ttl_seconds}
 
     def session_for(authorization: str | None):
@@ -109,9 +126,10 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
         return token, session
 
     @app.delete("/api/chat/sessions/current", status_code=204)
-    async def delete_session(authorization: str | None = Header(default=None)):
+    async def delete_session(response: Response, authorization: str | None = Header(default=None)):
         token, _ = session_for(authorization)
         app.state.sessions.items.pop(token, None)
+        response.delete_cookie(COOKIE_NAME, path="/cart")
 
     @app.post("/api/chat", response_model=ChatResponse)
     async def chat(body: ChatRequest, authorization: str | None = Header(default=None)):
@@ -144,6 +162,16 @@ def create_app(settings: Settings | None = None, interpreter=None, ekt_client=No
         session.requests.append(now)
         async with session.lock:
             response = await app.state.chat.reply(session, body.message)
+            if settings.demo_cart_enabled and response.cart_action == "integration_required":
+
+                def validate_cart_session():
+                    session_for(authorization)
+
+                response = await cart_reply(
+                    app.state.cart, session, body.message, response, validate_cart_session
+                )
+                # Keep history consistent with the final cart response seen by the user.
+                session.history[-1]["content"] = response.message[:3000]
             if app.state.sessions.get(token) is not session:
                 raise ApiError(
                     401, "SESSION_EXPIRED", "Сессия завершена во время обработки запроса."

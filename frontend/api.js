@@ -1,5 +1,5 @@
 // Session credentials live only in this module's memory, never in URLs or storage.
-const BASE = 'http://127.0.0.1:8000';
+export const API_BASE = `${location.protocol}//${location.hostname}:8000`;
 export class ApiError extends Error {
   constructor(message, status = 0, code = 'NETWORK_ERROR', retryable = true) {
     super(message);
@@ -10,16 +10,17 @@ export class ApiError extends Error {
 }
 export class CatalogApi {
   #token = null;
-  async request(path, { method = 'GET', body, authenticated = false } = {}) {
+  #creating = null;
+  async request(path, { method = 'GET', body, authenticated = false, extraHeaders = {} } = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 25000);
     try {
-      const headers = {};
+      const headers = { ...extraHeaders };
       if (body !== undefined) headers['Content-Type'] = 'application/json';
       if (authenticated && this.#token) headers.Authorization = `Bearer ${this.#token}`;
-      const response = await fetch(`${BASE}${path}`, {
+      const response = await fetch(`${API_BASE}${path}`, {
         method, headers, body: body === undefined ? undefined : JSON.stringify(body),
-        signal: controller.signal, credentials: 'omit', cache: 'no-store',
+        signal: controller.signal, credentials: 'include', cache: 'no-store',
       });
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
@@ -40,6 +41,7 @@ export class CatalogApi {
         if (code === 'REQUEST_ID_REUSED') description = 'Не удалось повторить сообщение: его ID уже занят. Отправьте сообщение заново.';
         const retryable = typeof serverError?.retryable === 'boolean'
           ? serverError.retryable : [408, 429, 500, 502, 503, 504].includes(response.status);
+        if (response.status === 401) this.#token = null;
         throw new ApiError(description, response.status, code, retryable && response.status !== 401);
       }
       return response.status === 204 ? null : await response.json();
@@ -51,11 +53,28 @@ export class CatalogApi {
     } finally { clearTimeout(timer); }
   }
   health() { return this.request('/health'); }
+  async session() {
+    if (this.#token) return;
+    if (!this.#creating) this.#creating = this.request('/api/chat/sessions', { method: 'POST' })
+      .then(session => { this.#token = session.session_token; })
+      .finally(() => { this.#creating = null; });
+    return this.#creating;
+  }
+  async authed(path, options = {}) {
+    await this.session();
+    return this.request(path, { ...options, authenticated: true });
+  }
+  cart() { return this.authed('/api/cart'); }
+  propose(body) { return this.authed('/api/cart/proposals', { method: 'POST', body }); }
+  confirm(proposalId, key) {
+    return this.authed('/api/cart/confirm', {
+      method: 'POST', body: { proposal_id: proposalId }, extraHeaders: { 'Idempotency-Key': key },
+    });
+  }
+  cancel(proposalId) { return this.authed('/api/cart/cancel', { method: 'POST', body: { proposal_id: proposalId } }); }
+  search(query) { return this.request(`/api/products?query=${encodeURIComponent(query)}&limit=8`); }
   async chat(message, requestId) {
-    if (!this.#token) {
-      const session = await this.request('/api/chat/sessions', { method: 'POST' });
-      this.#token = session.session_token;
-    }
+    await this.session();
     try {
       return await this.request('/api/chat', {
         method: 'POST', body: { message, request_id: requestId }, authenticated: true,

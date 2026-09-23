@@ -58,9 +58,14 @@ def main():
                         for s in ["Оплата:", "Доставка:", "https://ekt.kz/checkout-delivery/"]
                     )
                 elif expected == "cart":
-                    passed &= body.get(
-                        "cart_action"
-                    ) == "integration_required" and "не добавлены" in body.get("message", "")
+                    passed &= body.get("cart_action") in {
+                        "integration_required",
+                        "proposal_required",
+                        "confirmation_required",
+                    } and "не добавлены" in body.get("message", "")
+                    if health.json().get("cart_enabled"):
+                        cart = client.get("/api/cart", headers=headers)
+                        passed &= cart.status_code == 200 and cart.json().get("items") == []
                 elif expected == "search":
                     passed &= bool(ids)
                     first_id = ids[0] if ids else None
