@@ -1,0 +1,1 @@
+"""EKТ consultation backend."""
