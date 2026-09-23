@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="3" skipped="0" tests="7" time="2.622" timestamp="2026-09-23T16:05:45.068027+05:00" hostname="DESKTOP-H6H5BT6"><testcase classname="qa.test_negative_gate" name="test_qa004_oversized_product_id_is_client_error[product]" time="0.207"><failure message="AssertionError: Got 500: Internal Server Error&#10;assert 500 &lt; 500&#10; +  where 500 = &lt;Response [500 Internal Server Error]&gt;.status_code">qa_client = (&lt;starlette.testclient.TestClient object at 0x000001B477F72E10&gt;, {'Authorization': 'Bearer REDACTED_TEST_TOKEN'})
+endpoint = 'product'
+
+    @pytest.mark.parametrize("endpoint", ["product", "proposal"])
+    def test_qa004_oversized_product_id_is_client_error(qa_client, endpoint):
+        client, auth = qa_client
+        huge = 2**100
+        if endpoint == "product":
+            response = client.get(f"/api/products/{huge}")
+        else:
+            response = client.post(
+                "/api/cart/proposals", headers=auth, json={"product_id": huge, "quantity": 1}
+            )
+&gt;       assert 400 &lt;= response.status_code &lt; 500, f"Got {response.status_code}: {response.text}"
+E       AssertionError: Got 500: Internal Server Error
+E       assert 500 &lt; 500
+E        +  where 500 = &lt;Response [500 Internal Server Error]&gt;.status_code
+
+qa\test_negative_gate.py:49: AssertionError</failure></testcase><testcase classname="qa.test_negative_gate" name="test_qa004_oversized_product_id_is_client_error[proposal]" time="0.136"><failure message="AssertionError: Got 500: Internal Server Error&#10;assert 500 &lt; 500&#10; +  where 500 = &lt;Response [500 Internal Server Error]&gt;.status_code">qa_client = (&lt;starlette.testclient.TestClient object at 0x000001B47805B320&gt;, {'Authorization': 'Bearer REDACTED_TEST_TOKEN'})
+endpoint = 'proposal'
+
+    @pytest.mark.parametrize("endpoint", ["product", "proposal"])
+    def test_qa004_oversized_product_id_is_client_error(qa_client, endpoint):
+        client, auth = qa_client
+        huge = 2**100
+        if endpoint == "product":
+            response = client.get(f"/api/products/{huge}")
+        else:
+            response = client.post(
+                "/api/cart/proposals", headers=auth, json={"product_id": huge, "quantity": 1}
+            )
+&gt;       assert 400 &lt;= response.status_code &lt; 500, f"Got {response.status_code}: {response.text}"
+E       AssertionError: Got 500: Internal Server Error
+E       assert 500 &lt; 500
+E        +  where 500 = &lt;Response [500 Internal Server Error]&gt;.status_code
+
+qa\test_negative_gate.py:49: AssertionError</failure></testcase><testcase classname="qa.test_negative_gate" name="test_qa003_documented_demo_reimport_restores_buyable_fixture" time="0.155"><failure message="AssertionError: {&quot;error&quot;:{&quot;code&quot;:&quot;CATALOG_UNAVAILABLE&quot;,&quot;message&quot;:&quot;Снимок устарел или неполон.&quot;,&quot;retryable&quot;:false}}&#10;assert 503 == 200&#10; +  where 503 = &lt;Response [503 Service Unavailable]&gt;.status_code">qa_client = (&lt;starlette.testclient.TestClient object at 0x000001B47847B9B0&gt;, {'Authorization': 'Bearer REDACTED_TEST_TOKEN'})
+tmp_path = WindowsPath('[WORKSPACE]/work/cart-backend/qa-negative-1/test_qa003_documented_demo_rei0')
+
+    def test_qa003_documented_demo_reimport_restores_buyable_fixture(qa_client, tmp_path):
+        client, auth = qa_client
+        fixture = tmp_path / "demo.json"
+        fixture.write_text(
+            json.dumps(
+                [{"id": 900002, "name": "QA DEMO", "article": "QA-002", "price": 1200, "quantity": 8}]
+            ),
+            encoding="utf-8",
+        )
+        old = time.time() - 3600
+        os.utime(fixture, (old, old))
+        import_files(client.app.state.catalog, [fixture], "synthetic")
+        import_files(client.app.state.catalog, [fixture], "synthetic")
+        response = client.post(
+            "/api/cart/proposals", headers=auth, json={"product_id": 900002, "quantity": 1}
+        )
+&gt;       assert response.status_code == 200, response.text
+E       AssertionError: {"error":{"code":"CATALOG_UNAVAILABLE","message":"Снимок устарел или неполон.","retryable":false}}
+E       assert 503 == 200
+E        +  where 503 = &lt;Response [503 Service Unavailable]&gt;.status_code
+
+qa\test_negative_gate.py:69: AssertionError</failure></testcase><testcase classname="qa.test_negative_gate" name="test_safe_missing_terms" time="0.166" /><testcase classname="qa.test_negative_gate" name="test_forged_session_and_get_cannot_confirm" time="0.140" /><testcase classname="qa.test_negative_gate" name="test_wrong_content_type_and_additional_confirm_fields" time="0.132" /><testcase classname="qa.test_negative_gate" name="test_independent_sessions_can_reuse_idempotency_key" time="0.132" /></testsuite></testsuites>
