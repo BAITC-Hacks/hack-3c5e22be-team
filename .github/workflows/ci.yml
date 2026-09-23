@@ -1,0 +1,31 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - name: Validate and test
+        run: npm run check
+      - name: Start container
+        run: docker compose up --build -d --wait --wait-timeout 90
+      - name: Check deployed HTTP endpoints
+        run: |
+          curl --fail --retry 5 --retry-connrefused http://127.0.0.1:3000/healthz
+          curl --fail http://127.0.0.1:3000/api/status
+          curl --fail http://127.0.0.1:3000/
+      - name: Container logs
+        if: failure()
+        run: docker compose logs
+      - name: Stop container
+        if: always()
+        run: docker compose down
